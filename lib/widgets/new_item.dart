@@ -93,9 +93,9 @@ class _NewItemState extends State<NewItem> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      _formKey.currentState?.reset();
                     },
-                    child: const Text('Cancel'),
+                    child: const Text('Reset'),
                   ),
                   ElevatedButton(
                     onPressed: _saveForm,

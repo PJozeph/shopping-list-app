@@ -12,8 +12,7 @@ class ShoppingListWidget extends StatefulWidget {
 }
 
 class _ShoppingListWidgetState extends State<ShoppingListWidget> {
-
-final List<GroceryItem> _groceryItems = [];
+  final List<GroceryItem> _groceryItems = [];
 
   void _addItem() async {
     final newItem = await Navigator.of(
@@ -28,17 +27,27 @@ final List<GroceryItem> _groceryItems = [];
 
   @override
   Widget build(BuildContext context) {
+    Widget content = const Center(
+      child: Text(
+        'No items added yet!',
+        style: TextStyle(fontSize: 20, color: Colors.white),
+      ),
+    );
+    if (_groceryItems.isNotEmpty) {
+      content = ListView.builder(
+        itemCount: _groceryItems.length,
+        itemBuilder: (context, index) {
+          return CategoryItem(item: _groceryItems[index]);
+        },
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Shopping List'),
         actions: [IconButton(icon: const Icon(Icons.add), onPressed: _addItem)],
       ),
-      body: ListView.builder(
-        itemCount: _groceryItems.length,
-        itemBuilder: (context, index) {
-          return CategoryItem(item: _groceryItems[index]);
-        },
-      ),
+      body: content,
     );
   }
 }

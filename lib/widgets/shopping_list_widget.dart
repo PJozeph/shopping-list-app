@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shopping_list/data/dummy_items.dart';
+import 'package:shopping_list/models/category_item.dart';
 import 'package:shopping_list/widgets/category_item_widget.dart';
 import 'package:shopping_list/widgets/new_item.dart';
 
@@ -11,11 +12,18 @@ class ShoppingListWidget extends StatefulWidget {
 }
 
 class _ShoppingListWidgetState extends State<ShoppingListWidget> {
-  
-  void _addItem() {
-    Navigator.of(
+
+final List<GroceryItem> _groceryItems = [];
+
+  void _addItem() async {
+    final newItem = await Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (context) => const NewItem()));
+    if (newItem != null) {
+      setState(() {
+        _groceryItems.add(newItem as GroceryItem);
+      });
+    }
   }
 
   @override
@@ -26,9 +34,9 @@ class _ShoppingListWidgetState extends State<ShoppingListWidget> {
         actions: [IconButton(icon: const Icon(Icons.add), onPressed: _addItem)],
       ),
       body: ListView.builder(
-        itemCount: groceryItems.length,
+        itemCount: _groceryItems.length,
         itemBuilder: (context, index) {
-          return CategoryItem(item: groceryItems[index]);
+          return CategoryItem(item: _groceryItems[index]);
         },
       ),
     );

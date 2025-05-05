@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shopping_list/data/categories.dart';
+import 'package:shopping_list/models/categories.dart';
+import 'package:shopping_list/models/category_item.dart';
 
 class NewItem extends StatefulWidget {
   const NewItem({super.key});
@@ -14,11 +16,23 @@ class _NewItemState extends State<NewItem> {
   @override
   Widget build(BuildContext context) {
     final _formKey = GlobalKey<FormState>();
+    var _enteredName = '';
+    var _selectedCategory = categories[Categories.dairy];
+    var _selectedQuantity;
 
     void _saveForm() {
       if (_formKey.currentState!.validate()) {
         // Save the form data
-        Navigator.of(context).pop();
+        _formKey.currentState!.save();
+        // print the values to the console
+        Navigator.of(context).pop(
+          GroceryItem(
+            id: DateTime.now().toString(),
+            name: _enteredName,
+            quantity: _selectedQuantity,
+            category: _selectedCategory!,
+          ),
+        );
       }
     }
 
@@ -39,6 +53,9 @@ class _NewItemState extends State<NewItem> {
                   }
                   return null;
                 },
+                onSaved: (value) {
+                  _enteredName = value ?? '';
+                },
               ),
               Row(
                 children: [
@@ -57,11 +74,15 @@ class _NewItemState extends State<NewItem> {
                         }
                         return null;
                       },
+                      onSaved: (value) {
+                        _selectedQuantity = int.tryParse(value ?? '1');
+                      },
                     ),
                   ),
                   const SizedBox(width: 20),
                   Expanded(
                     child: DropdownButtonFormField(
+                      value: _selectedCategory,
                       items:
                           categories.entries
                               .map(
@@ -82,6 +103,11 @@ class _NewItemState extends State<NewItem> {
                               )
                               .toList(),
                       onChanged: (value) {},
+                      onSaved: (value) {
+                        setState(() {
+                          _selectedCategory = value;
+                        });
+                      },
                       decoration: const InputDecoration(labelText: 'Category'),
                     ),
                   ),

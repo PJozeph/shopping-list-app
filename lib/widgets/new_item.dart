@@ -22,9 +22,7 @@ class _NewItemState extends State<NewItem> {
 
     void _saveForm() {
       if (_formKey.currentState!.validate()) {
-        // Save the form data
         _formKey.currentState!.save();
-        // print the values to the console
         Navigator.of(context).pop(
           GroceryItem(
             id: DateTime.now().toString(),

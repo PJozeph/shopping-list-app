@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/models/categories.dart';
-import 'package:shopping_list/models/category_item.dart';
+
+import 'package:http/http.dart' as http;
 
 class NewItem extends StatefulWidget {
   const NewItem({super.key});
@@ -23,14 +26,42 @@ class _NewItemState extends State<NewItem> {
     void _saveForm() {
       if (_formKey.currentState!.validate()) {
         _formKey.currentState!.save();
-        Navigator.of(context).pop(
-          GroceryItem(
-            id: DateTime.now().toString(),
-            name: _enteredName,
-            quantity: _selectedQuantity,
-            category: _selectedCategory!,
-          ),
+
+        final url = Uri.https(
+          'shopping-list-app-37c8d-default-rtdb.europe-west1.firebasedatabase.app',
+          'shopping-list.json',
         );
+
+        http
+            .post(
+              url,
+              headers: <String, String>{
+                'Content-Type': 'application/json; charset=UTF-8',
+              },
+              body: json.encode({
+                'name': _enteredName,
+                'quantity': _selectedQuantity,
+                'category': _selectedCategory?.name,
+              }),
+            )
+            .then((response) {
+              if (response.statusCode == 200) {
+                // Pass the new item back to the previous screen
+                if (!context.mounted) {
+                  return;
+                }
+                Navigator.of(context).pop();
+              } else {
+                // Handle error
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Failed to add item. Please try again.'),
+                  ),
+                );
+              }
+            });
+
+        // Navigator.of(context).pop();
       }
     }
 

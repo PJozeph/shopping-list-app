@@ -17,6 +17,8 @@ class ShoppingListWidget extends StatefulWidget {
 
 class _ShoppingListWidgetState extends State<ShoppingListWidget> {
   List<GroceryItem> _groceryItems = [];
+  var _isLoading = true;
+  var _error = null;
 
   @override
   void initState() {
@@ -26,13 +28,19 @@ class _ShoppingListWidgetState extends State<ShoppingListWidget> {
 
   void _loadItems() async {
     final url = Uri.https(
-      'shopping-list-app-37c8d-default-rtdb.europe-west1.firebasedatabase.app',
+      'abcshopping-list-app-37c8d-default-rtdb.europe-west1.firebasedatabase.app',
       'shopping-list.json',
     );
     final response = await http.get(url);
-    final Map<String, dynamic> listData = json.decode(
-      response.body,
-    );
+
+    if (response.statusCode >= 400) {
+      setState(() {
+        _error = 'An error occurred';
+        _isLoading = false;
+      });
+    }
+
+    final Map<String, dynamic> listData = json.decode(response.body);
     final List<GroceryItem> _loadedItems = [];
     for (var item in listData.entries) {
       final category =
@@ -50,19 +58,20 @@ class _ShoppingListWidgetState extends State<ShoppingListWidget> {
     }
     setState(() {
       _groceryItems = _loadedItems;
+      _isLoading = false;
     });
   }
 
   void _addItem() async {
-    await Navigator.of(
+    final newItem = await Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (context) => const NewItem()));
     _loadItems();
-    // if (newItem != null) {
-    //   setState(() {
-    //     _groceryItems.add(newItem as GroceryItem);
-    //   });
-    // }
+    if (newItem != null) {
+      setState(() {
+        _groceryItems.add(newItem as GroceryItem);
+      });
+    }
   }
 
   @override
@@ -73,6 +82,10 @@ class _ShoppingListWidgetState extends State<ShoppingListWidget> {
         style: TextStyle(fontSize: 20, color: Colors.white),
       ),
     );
+
+    if (_isLoading) {
+      content = const Center(child: CircularProgressIndicator());
+    }
     if (_groceryItems.isNotEmpty) {
       content = ListView.builder(
         itemCount: _groceryItems.length,
@@ -80,11 +93,20 @@ class _ShoppingListWidgetState extends State<ShoppingListWidget> {
           return CategoryItem(item: _groceryItems[index]);
         },
       );
+
+      if (_error) {
+        content = Center(
+          child: Text(
+            _error,
+            style: const TextStyle(fontSize: 20, color: Colors.white),
+          ),
+        );
+      }
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shopping List'),
+        title: const Text('Shopping Listttt'),
         actions: [IconButton(icon: const Icon(Icons.add), onPressed: _addItem)],
       ),
       body: content,

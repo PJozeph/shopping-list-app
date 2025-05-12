@@ -5,6 +5,7 @@ import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/models/categories.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:shopping_list/models/category_item.dart';
 
 class NewItem extends StatefulWidget {
   const NewItem({super.key});
@@ -22,46 +23,39 @@ class _NewItemState extends State<NewItem> {
     var _enteredName = '';
     var _selectedCategory = categories[Categories.dairy];
     var _selectedQuantity;
+    var _isSending = false;
 
-    void _saveForm() {
+    void _saveForm() async {
       if (_formKey.currentState!.validate()) {
         _formKey.currentState!.save();
+        setState(() {
+          _isSending = true;
+        });
 
         final url = Uri.https(
-          'shopping-list-app-37c8d-default-rtdb.europe-west1.firebasedatabase.app',
+          'abcshopping-list-app-37c8d-default-rtdb.europe-west1.firebasedatabase.app',
           'shopping-list.json',
         );
 
-        http
-            .post(
-              url,
-              headers: <String, String>{
-                'Content-Type': 'application/json; charset=UTF-8',
-              },
-              body: json.encode({
-                'name': _enteredName,
-                'quantity': _selectedQuantity,
-                'category': _selectedCategory?.name,
-              }),
-            )
-            .then((response) {
-              if (response.statusCode == 200) {
-                // Pass the new item back to the previous screen
-                if (!context.mounted) {
-                  return;
-                }
-                Navigator.of(context).pop();
-              } else {
-                // Handle error
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Failed to add item. Please try again.'),
-                  ),
-                );
-              }
-            });
+        final addResponse = await http.post(
+          url,
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: json.encode({
+            'name': _enteredName,
+            'quantity': _selectedQuantity,
+            'category': _selectedCategory?.name,
+          }),
+        );
 
-        // Navigator.of(context).pop();
+        final newItem = GroceryItem(
+          id: json.decode(addResponse.body)['name'],
+          name: _enteredName,
+          quantity: _selectedQuantity,
+          category: _selectedCategory!,
+        );
+        Navigator.of(context).pop(newItem);
       }
     }
 
@@ -147,14 +141,26 @@ class _NewItemState extends State<NewItem> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () {
-                      _formKey.currentState?.reset();
-                    },
+                    onPressed:
+                        _isSending
+                            ? null
+                            : () {
+                              _formKey.currentState?.reset();
+                            },
                     child: const Text('Reset'),
                   ),
                   ElevatedButton(
-                    onPressed: _saveForm,
-                    child: const Text('Add Item'),
+                    onPressed: _isSending ? null : _saveForm,
+                    child:
+                        _isSending
+                            ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                              ),
+                            )
+                            : Text('Add Item'),
                   ),
                 ],
               ),
